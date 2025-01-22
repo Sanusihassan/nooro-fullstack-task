@@ -26,6 +26,7 @@ const TodoApp = () => {
       setTasks(data);
     } catch (error) {
       console.error('Failed to fetch tasks:', error);
+      setTasks([]); // Fallback
     } finally {
       setIsLoading(false);
     }

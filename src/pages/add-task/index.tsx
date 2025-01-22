@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const colors = [
   { id: 'red', value: '#EF4444' },
@@ -15,12 +17,36 @@ const colors = [
 ];
 
 const AddTaskPage = () => {
+  const router = useRouter();
   const [selectedColor, setSelectedColor] = useState(colors[0].value);
   const [title, setTitle] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://fictional-garbanzo-xpg46v5vxvjfvqwq-3001.app.github.dev';
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
+    if (!title.trim()) {
+      setError('Title is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await axios.post(`${apiUrl}/tasks`, {
+        title: title.trim(),
+        color: selectedColor,
+        completed: false
+      });
+      router.push('/');
+    } catch (err) {
+      setError('Failed to create task. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,6 +76,7 @@ const AddTaskPage = () => {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-zinc-800 border-0 rounded-md p-3 text-gray-200 placeholder:text-gray-600 focus:ring-2 focus:ring-blue-500"
             />
+            {error && <p className="mt-2 text-red-500 text-sm">{error}</p>}
           </div>
 
           <div>
@@ -71,9 +98,10 @@ const AddTaskPage = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md transition-colors flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add Task
+            {isSubmitting ? 'Adding Task...' : 'Add Task'}
           </button>
         </form>
       </div>
